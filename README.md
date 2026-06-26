@@ -31,11 +31,17 @@ This program allows you to run and visualize Tic-Tac-Toe games between different
     pip install google-generativeai
     ```
 
-2.  **Set your Google Gemini API key:**
+2.  **Set your Google Gemini API key** as an environment variable (the key is never stored in the code):
 
-    * Open `algorithms.py`.
-    * Find the line `genai.configure(api_key="YOUR_API_KEY_HERE")`.
-    * Replace `"YOUR_API_KEY_HERE"` with your actual Gemini API key.
+    ```bash
+    # macOS / Linux
+    export GEMINI_API_KEY="your-gemini-api-key"
+
+    # Windows (PowerShell)
+    $env:GEMINI_API_KEY="your-gemini-api-key"
+    ```
+
+    The program reads the key from `GEMINI_API_KEY` at runtime (see `.env.example`). The `simple`, `minimax`, and `alpha-beta` algorithms run without a key.
 
 ### Running the Program
 

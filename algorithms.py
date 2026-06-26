@@ -2,6 +2,7 @@
 import functions
 import google.generativeai as genai
 import re
+import os
 
 # Add global counters for nodes
 minimax_nodes = 0
@@ -186,7 +187,9 @@ def alpha_beta_algo(board, player):
     return best_move
 
 
-genai.configure(api_key="YOUR_API_KEY_HERE")
+# API key is read from the GEMINI_API_KEY environment variable — never hard-coded.
+# The simple/minimax/alpha-beta algorithms run without a key; only gemini_algo needs it.
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
 def gemini_algo(board, player):
     """
