@@ -2,6 +2,8 @@
 
 This program allows you to run and visualize Tic-Tac-Toe games between different AI algorithms. You can also run performance tests to compare the algorithms.
 
+> Academic team project (4 members).
+
 ## Features
 
 * **Standardized Tests:** Run multiple games to compare the performance of different AI algorithms.
