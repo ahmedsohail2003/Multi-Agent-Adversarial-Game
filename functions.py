@@ -205,8 +205,9 @@ def run_game(player_1, player_2, board_size=3, visualize=False):
                 
             current_player = 2 if current_player == 1 else 1
         else:
+            # An invalid move forfeits the game; the opponent wins.
             print(f"invalid move from player {current_player}")
-            exit
+            return True, (2 if current_player == 1 else 1), board
 
         game_finished, winner = check_game_status(board)
    

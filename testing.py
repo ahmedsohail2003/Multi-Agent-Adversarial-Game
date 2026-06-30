@@ -26,8 +26,10 @@ def run_game_with_metrics(player1, player2, board_size=3):
                 metrics['player1_operations'].append(algorithms.get_minimax_nodes())
             elif player1 == algorithms.alpha_beta_algo:
                 metrics['player1_operations'].append(algorithms.get_alpha_beta_nodes())
-            else:  # Gemini
+            elif player1 == algorithms.gemini_algo:
                 metrics['player1_operations'].append(algorithms.get_gemini_calls())
+            else:  # simple_algo: no search/API metric
+                metrics['player1_operations'].append(0)
         else:
             move = player2(board, current_player)
             metrics['player2_time'].append(time.time() - start_time)
@@ -35,8 +37,10 @@ def run_game_with_metrics(player1, player2, board_size=3):
                 metrics['player2_operations'].append(algorithms.get_minimax_nodes())
             elif player2 == algorithms.alpha_beta_algo:
                 metrics['player2_operations'].append(algorithms.get_alpha_beta_nodes())
-            else:  # Gemini
+            elif player2 == algorithms.gemini_algo:
                 metrics['player2_operations'].append(algorithms.get_gemini_calls())
+            else:  # simple_algo: no search/API metric
+                metrics['player2_operations'].append(0)
 
         if not make_move(board, move[0], move[1], current_player):
             break
