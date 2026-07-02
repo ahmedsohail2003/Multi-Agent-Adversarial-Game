@@ -1,6 +1,6 @@
 #algorithims.py
 import functions
-import google.generativeai as genai
+from google import genai
 import re
 import os
 
@@ -8,14 +8,17 @@ import os
 minimax_nodes = 0
 alpha_beta_nodes = 0
 _gemini_calls = 0
+_gemini_decisions = 0
 _gemini_retries = 0            # total corrective re-prompts issued across all calls
 _gemini_first_try_valid = 0    # moves accepted on the very first attempt (no retry needed)
 
 def reset_node_counters():
-    global minimax_nodes, alpha_beta_nodes, _gemini_calls, _gemini_retries, _gemini_first_try_valid
+    global minimax_nodes, alpha_beta_nodes, _gemini_calls, _gemini_decisions
+    global _gemini_retries, _gemini_first_try_valid
     minimax_nodes = 0
     alpha_beta_nodes = 0
     _gemini_calls  = 0
+    _gemini_decisions = 0
     _gemini_retries = 0
     _gemini_first_try_valid = 0
 
@@ -27,6 +30,9 @@ def get_alpha_beta_nodes():
 
 def get_gemini_calls():
     return _gemini_calls
+
+def get_gemini_decisions():
+    return _gemini_decisions
 
 def get_gemini_retries():
     return _gemini_retries
@@ -197,10 +203,6 @@ def alpha_beta_algo(board, player):
     return best_move
 
 
-# API key is read from the GEMINI_API_KEY environment variable — never hard-coded.
-# The simple/minimax/alpha-beta algorithms run without a key; only gemini_algo needs it.
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
-
 def _parse_gemini_response(text):
     """
     Parses Gemini's raw text into a (row, col) tuple of ints.
@@ -218,6 +220,7 @@ def _parse_gemini_response(text):
 
 # Maximum number of corrective re-prompts before falling back to a safe move.
 GEMINI_MAX_RETRIES = 3
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 
 def gemini_algo(board, player):
@@ -237,12 +240,16 @@ def gemini_algo(board, player):
     Returns:
         tuple: The chosen move (row, col).
     """
-    global _gemini_calls, _gemini_retries, _gemini_first_try_valid
-    _gemini_calls += 1  # Track API calls (one logical decision = one call here)
+    global _gemini_calls, _gemini_decisions, _gemini_retries, _gemini_first_try_valid
+    _gemini_decisions += 1
 
     possible_moves = functions.get_possible_moves(board)
     best_move = possible_moves[0]  # deterministic safe fallback
     board_size = len(board)
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("GEMINI_API_KEY is not set. Using fallback move.")
+        return best_move
 
     symbols = {0: " ", 1: "X", 2: "O"}
     board_desc = "\n".join(
@@ -259,7 +266,7 @@ formatted exactly like: 'row,column' with no other text.
 Examples of valid responses: '0,1' or '{board_size-1},{board_size-1}'"""
 
     try:
-        model = genai.GenerativeModel('gemini-2.0-pro-exp')
+        client = genai.Client(api_key=api_key)
     except Exception as e:
         # Model could not even be constructed (e.g. no/invalid key) -> safe fallback.
         print(f"Gemini error: {str(e)[:50]}... Using fallback move.")
@@ -273,7 +280,11 @@ Examples of valid responses: '0,1' or '{board_size-1},{board_size-1}'"""
 
         prompt = base_prompt + feedback
         try:
-            response = model.generate_content(prompt)
+            _gemini_calls += 1
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+            )
             row, col = _parse_gemini_response(response.text)
 
             if not (0 <= row < board_size and 0 <= col < board_size):

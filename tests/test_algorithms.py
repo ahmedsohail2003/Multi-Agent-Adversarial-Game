@@ -1,7 +1,7 @@
 # tests/test_algorithms.py
 import functions
 
-# Importing algorithms transitively imports google.generativeai (a project dependency);
+# Importing algorithms transitively imports google.genai (a project dependency);
 # the tests below exercise only the pure search logic (minimax / alpha-beta), not the Gemini API.
 import algorithms
 

@@ -14,7 +14,8 @@ This program allows you to run and visualize Tic-Tac-Toe games between different
     * `alpha_beta_algo`: An AI using the Alpha-Beta Pruning Minimax algorithm.
     * `gemini_algo`: An AI powered by Google's Gemini API.
 * **Board Size Configuration:** Play on boards of different sizes (e.g., 3x3, 4x4).
-* **Performance Metrics:** Track time and node/API call metrics for each move.
+* **Performance Metrics:** Track time, search-node counts, Gemini decisions,
+  actual API requests, first-try validity, and corrective retries.
 
 ## Getting Started
 
@@ -22,7 +23,7 @@ This program allows you to run and visualize Tic-Tac-Toe games between different
 
 * Python 3.x installed on your system.
 * Required Python packages:
-    * `google-generativeai` (for the Gemini algorithm)
+    * `google-genai` (the current Google GenAI SDK)
 * Google Gemini API Key (for the Gemini algorithm)
 
 ### Installation
@@ -30,7 +31,7 @@ This program allows you to run and visualize Tic-Tac-Toe games between different
 1.  **Install the required packages:**
 
     ```bash
-    pip install google-generativeai
+    pip install -r requirements.txt
     ```
 
 2.  **Set your Google Gemini API key** as an environment variable (the key is never stored in the code):
@@ -43,7 +44,9 @@ This program allows you to run and visualize Tic-Tac-Toe games between different
     $env:GEMINI_API_KEY="your-gemini-api-key"
     ```
 
-    The program reads the key from `GEMINI_API_KEY` at runtime (see `.env.example`). The `simple`, `minimax`, and `alpha-beta` algorithms run without a key.
+    The program reads the key from `GEMINI_API_KEY` at runtime (see `.env.example`).
+    You can optionally override the default model with `GEMINI_MODEL`. The `simple`,
+    `minimax`, and `alpha-beta` algorithms run without a key.
 
 ### Running the Program
 

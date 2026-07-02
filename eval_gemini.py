@@ -15,7 +15,8 @@ Design notes
   (or ``evaluate``) is actually invoked, and ``main()`` refuses to run without a
   key unless explicitly overridden.
 * All metric plumbing reuses the counters already exposed by ``algorithms``:
-  ``get_gemini_calls``, ``get_gemini_retries`` and ``get_gemini_first_try_valid``.
+  ``get_gemini_decisions``, ``get_gemini_calls``, ``get_gemini_retries`` and
+  ``get_gemini_first_try_valid``.
 """
 
 import os
@@ -56,7 +57,8 @@ def evaluate(opponent_algo=None, num_games=3, board_size=3, gemini_is_player1=Tr
         gemini_player_num = 2
 
     wins = draws = losses = 0
-    total_calls = 0          # number of Gemini decisions (moves) made
+    total_moves = 0          # number of Gemini decisions (moves) made
+    total_calls = 0          # actual generate_content requests, including retries
     total_retries = 0        # number of corrective re-prompts across those moves
     total_first_try_valid = 0  # decisions accepted on the first attempt
 
@@ -74,27 +76,30 @@ def evaluate(opponent_algo=None, num_games=3, board_size=3, gemini_is_player1=Tr
         else:
             losses += 1
 
+        moves = algorithms.get_gemini_decisions()
         calls = algorithms.get_gemini_calls()
+        total_moves += moves
         total_calls += calls
         total_retries += algorithms.get_gemini_retries()
         total_first_try_valid += algorithms.get_gemini_first_try_valid()
 
         print(
             f"  Game {game_index + 1}/{num_games}: "
-            f"winner={winner!r}, gemini_moves={calls}, "
+            f"winner={winner!r}, gemini_moves={moves}, api_calls={calls}, "
             f"retries={algorithms.get_gemini_retries()}, "
             f"first_try_valid={algorithms.get_gemini_first_try_valid()}"
         )
 
-    first_try_rate = (total_first_try_valid / total_calls) if total_calls else 0.0
-    avg_retries = (total_retries / total_calls) if total_calls else 0.0
+    first_try_rate = (total_first_try_valid / total_moves) if total_moves else 0.0
+    avg_retries = (total_retries / total_moves) if total_moves else 0.0
 
     return {
         "num_games": num_games,
         "board_size": board_size,
         "gemini_player_num": gemini_player_num,
         "opponent": getattr(opponent_algo, "__name__", str(opponent_algo)),
-        "total_moves": total_calls,
+        "total_moves": total_moves,
+        "total_api_calls": total_calls,
         "total_retries": total_retries,
         "first_try_valid": total_first_try_valid,
         "first_try_valid_rate": first_try_rate,
@@ -115,6 +120,7 @@ def print_report(metrics):
         f"Gemini = Player {metrics['gemini_player_num']})"
     )
     print(f"Gemini moves:        {metrics['total_moves']}")
+    print(f"Gemini API calls:    {metrics['total_api_calls']}")
     print(f"First-try valid:     {metrics['first_try_valid']} / {metrics['total_moves']}")
     print(f"First-try valid rate:{metrics['first_try_valid_rate'] * 100:6.1f}%")
     print(f"Avg retries / move:  {metrics['avg_retries_per_move']:.3f}")
