@@ -162,14 +162,14 @@ def run_game(player_1, player_2, board_size=3, visualize=False):
             before_alpha_beta_nodes = algorithms.get_alpha_beta_nodes()
             before_gemini_calls = algorithms.get_gemini_calls()
             
+        start_time = time.perf_counter()
         if current_player == 1:
             row, col = player_1(board, current_player)
         else:
             row, col = player_2(board, current_player)
-       
-        start_time = time.perf_counter()
+        t = time.perf_counter() - start_time
+
         if make_move(board, row, col, current_player):
-            t = time.perf_counter() - start_time
             if visualize:
                 print(f"Player {current_player}:")
                 print(f"Time Spent: {t}")
