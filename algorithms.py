@@ -220,7 +220,7 @@ def _parse_gemini_response(text):
 
 # Maximum number of corrective re-prompts before falling back to a safe move.
 GEMINI_MAX_RETRIES = 3
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 def gemini_algo(board, player):

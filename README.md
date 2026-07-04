@@ -45,8 +45,9 @@ This program allows you to run and visualize Tic-Tac-Toe games between different
     ```
 
     The program reads the key from `GEMINI_API_KEY` at runtime (see `.env.example`).
-    You can optionally override the default model with `GEMINI_MODEL`. The `simple`,
-    `minimax`, and `alpha-beta` algorithms run without a key.
+    You can optionally override the default model (`gemini-2.5-flash`) with the
+    `GEMINI_MODEL` environment variable. The `simple`, `minimax`, and `alpha-beta`
+    algorithms run without a key.
 
 ### Running the Program
 
