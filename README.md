@@ -71,12 +71,27 @@ and the program prints a note saying so when you pick a board larger than 3x3.
     python main.py
     ```
 
+### Running the Tests
+
+The Gemini agent is tested against a mocked client, so the suite needs no API
+key or network access:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+The same suite runs in GitHub Actions (see `.github/workflows/ci.yml`).
+
 ### Usage
 
 The program will present you with a menu:
 
-1.  **Standardized Test:** Runs performance tests between selected algorithms.
-2.  **Standardized Test with Selected Algorithm:** Runs a single game between two user selected algorithms.
+1.  **Standardized Test:** Runs a batch of games over fixed algorithm pairings
+    (Minimax vs. Alpha-Beta, Minimax vs. Gemini, Alpha-Beta vs. Gemini) with a
+    user-chosen game count and board size, then prints win/draw counts and
+    average time and operations per move.
+2.  **Standardized Test with Selected Algorithm:** Runs a single game between two user-selected algorithms.
 3.  **Watch Game in Real Time:** Runs a game between two selected algorithms and displays the board and metrics.
 4.  **End Program:** Exits the program.
 
@@ -84,5 +99,8 @@ The program will present you with a menu:
 
 * `main.py`: The main script that runs the program.
 * `functions.py`: Contains functions for board manipulation and game logic.
-* `algorithms.py`: Contains the AI algorithms (Minimax, Alpha-Beta, Gemini).
+* `algorithms.py`: Contains the AI algorithms (Minimax, Alpha-Beta, Gemini) and the depth-limit/heuristic logic for larger boards.
 * `testing.py`: Contains functions for running performance tests.
+* `eval_gemini.py`: Standalone evaluation script for the Gemini agent (win/draw/loss, first-try valid-move rate, average retries per move). Makes live API calls, so it requires `GEMINI_API_KEY`.
+* `tests/`: Pytest suite covering the game logic, both searchers (including the depth-limited behavior), and the Gemini agent's retry loop.
+* `.env.example`: Template for the environment variables the program reads at runtime.
