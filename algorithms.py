@@ -67,7 +67,75 @@ def get_utility(board, player):
     return None  # Game is not over
 
 
-def minimax(board, player, maximizing_player):
+# --- Depth-limited search ---------------------------------------------------
+# Exhaustive minimax is only tractable on the standard 3x3 board (9! = 362,880
+# move orderings). A 4x4 board already has 16! (about 2 x 10^13) orderings, so
+# boards larger than 3x3 are searched to a fixed number of plies and scored
+# with `evaluate_heuristic` at the cutoff. 3x3 boards are still searched
+# exhaustively, which keeps minimax and alpha-beta provably optimal there.
+SEARCH_DEPTH_LIMIT = int(os.environ.get("SEARCH_DEPTH_LIMIT", "4"))
+
+
+def get_search_depth(board_size):
+    """
+    Returns the search-depth limit (in plies) used for a given board size.
+
+    Args:
+        board_size (int): The board dimension (3 for 3x3, 4 for 4x4, ...).
+
+    Returns:
+        int or None: None for boards up to 3x3 (exhaustive search); otherwise
+        SEARCH_DEPTH_LIMIT (overridable via the SEARCH_DEPTH_LIMIT env var).
+    """
+    return None if board_size <= 3 else SEARCH_DEPTH_LIMIT
+
+
+def evaluate_heuristic(board, player):
+    """
+    Heuristic score of a non-terminal board from ``player``'s perspective.
+
+    Every line (row, column, or diagonal) that contains only one player's
+    marks contributes the square of that mark count to that player's score;
+    lines contested by both players contribute nothing. The returned value is
+    (own score - opponent score) normalized into the open interval (-1, 1),
+    so a heuristic estimate can never outweigh a true win/loss utility of +/-1
+    found by the search.
+
+    Args:
+        board (list): The current board state.
+        player (int): The player to evaluate for (1 or 2).
+
+    Returns:
+        float: A score in (-1, 1); positive favors ``player``.
+    """
+    board_size = len(board)
+    opponent = 2 if player == 1 else 1
+
+    lines = [list(row) for row in board]  # rows
+    lines.extend(
+        [board[row][col] for row in range(board_size)] for col in range(board_size)
+    )  # columns
+    lines.append([board[i][i] for i in range(board_size)])  # main diagonal
+    lines.append([board[i][board_size - 1 - i] for i in range(board_size)])  # anti-diagonal
+
+    def line_score(line, who, other):
+        if other in line:
+            return 0  # contested line: can never be completed by `who`
+        count = sum(1 for cell in line if cell == who)
+        return count * count
+
+    raw = sum(
+        line_score(line, player, opponent) - line_score(line, opponent, player)
+        for line in lines
+    )
+    # A non-terminal board has no completed line, so any single-player line
+    # holds at most board_size - 1 marks; dividing by one more than the
+    # largest possible raw score keeps the result strictly inside (-1, 1).
+    max_raw = len(lines) * (board_size - 1) ** 2
+    return raw / (max_raw + 1)
+
+
+def minimax(board, player, maximizing_player, depth=None):
     """
     Minimax algorithm to find the best move.
 
@@ -75,9 +143,12 @@ def minimax(board, player, maximizing_player):
         board (list): The current board state.
         player (int): The current player.
         maximizing_player (int): The player for whom we are maximizing.
+        depth (int or None): Remaining plies to search. None means no limit
+            (exhaustive search); at 0 the position is scored with
+            `evaluate_heuristic` instead of being expanded further.
 
     Returns:
-        int: The best score for the maximizing player.
+        float: The best score for the maximizing player.
     """
     global minimax_nodes
     minimax_nodes += 1
@@ -86,13 +157,17 @@ def minimax(board, player, maximizing_player):
     if utility is not None:
         return utility
 
+    if depth is not None and depth <= 0:
+        return evaluate_heuristic(board, maximizing_player)
+    next_depth = None if depth is None else depth - 1
+
     possible_moves = functions.get_possible_moves(board)
     if player == maximizing_player:
         best_score = -float('inf')
         for row, col in possible_moves:
             new_board = [row[:] for row in board]
             functions.make_move(new_board, row, col, player)
-            score = minimax(new_board, 2 if player == 1 else 1, maximizing_player)
+            score = minimax(new_board, 2 if player == 1 else 1, maximizing_player, next_depth)
             best_score = max(best_score, score)
         return best_score
     else:
@@ -100,7 +175,7 @@ def minimax(board, player, maximizing_player):
         for row, col in possible_moves:
             new_board = [row[:] for row in board]  # Create a copy
             functions.make_move(new_board, row, col, player)
-            score = minimax(new_board, 2 if player == 1 else 1, maximizing_player)
+            score = minimax(new_board, 2 if player == 1 else 1, maximizing_player, next_depth)
             best_score = min(best_score, score)
         return best_score
 
@@ -108,6 +183,11 @@ def minimax(board, player, maximizing_player):
 def minimax_algo(board, player):
     """
     Algorithm that uses minimax to choose the best move.
+
+    On boards up to 3x3 the search is exhaustive (optimal play). On larger
+    boards it is cut off after `get_search_depth` plies and positions at the
+    cutoff are scored with `evaluate_heuristic`, so play is strong but not
+    provably optimal.
 
     Args:
         board (list): The current board state.
@@ -117,20 +197,22 @@ def minimax_algo(board, player):
         tuple: The best move (row, col).
     """
 
+    depth = get_search_depth(len(board))
+    child_depth = None if depth is None else depth - 1
     possible_moves = functions.get_possible_moves(board)
     best_move = None
     best_score = -float('inf')
     for row, col in possible_moves:
         new_board = [row[:] for row in board]
         functions.make_move(new_board, row, col, player)
-        score = minimax(new_board, 2 if player == 1 else 1, player)
+        score = minimax(new_board, 2 if player == 1 else 1, player, child_depth)
         if score > best_score:
             best_score = score
             best_move = (row, col)
     return best_move
 
 
-def alpha_beta_minimax(board, player, maximizing_player, alpha, beta):
+def alpha_beta_minimax(board, player, maximizing_player, alpha, beta, depth=None):
     """
     Alpha-Beta Pruning Minimax algorithm.
 
@@ -140,9 +222,12 @@ def alpha_beta_minimax(board, player, maximizing_player, alpha, beta):
         maximizing_player (int): The player for whom we are maximizing.
         alpha (int): The best value that the maximizing player can guarantee.
         beta (int): The best value that the minimizing player can guarantee.
+        depth (int or None): Remaining plies to search. None means no limit
+            (exhaustive search); at 0 the position is scored with
+            `evaluate_heuristic` instead of being expanded further.
 
     Returns:
-        int: The best score for the maximizing player.
+        float: The best score for the maximizing player.
     """
     global alpha_beta_nodes
     alpha_beta_nodes += 1
@@ -151,13 +236,17 @@ def alpha_beta_minimax(board, player, maximizing_player, alpha, beta):
     if utility is not None:
         return utility
 
+    if depth is not None and depth <= 0:
+        return evaluate_heuristic(board, maximizing_player)
+    next_depth = None if depth is None else depth - 1
+
     possible_moves = functions.get_possible_moves(board)
     if player == maximizing_player:
         best_score = -float('inf')
         for row, col in possible_moves:
             new_board = [row[:] for row in board]
             functions.make_move(new_board, row, col, player)
-            score = alpha_beta_minimax(new_board, 2 if player == 1 else 1, maximizing_player, alpha, beta)
+            score = alpha_beta_minimax(new_board, 2 if player == 1 else 1, maximizing_player, alpha, beta, next_depth)
             best_score = max(best_score, score)
             alpha = max(alpha, best_score)
             if beta <= alpha:
@@ -168,7 +257,7 @@ def alpha_beta_minimax(board, player, maximizing_player, alpha, beta):
         for row, col in possible_moves:
             new_board = [row[:] for row in board]
             functions.make_move(new_board, row, col, player)
-            score = alpha_beta_minimax(new_board, 2 if player == 1 else 1, maximizing_player, alpha, beta)
+            score = alpha_beta_minimax(new_board, 2 if player == 1 else 1, maximizing_player, alpha, beta, next_depth)
             best_score = min(best_score, score)
             beta = min(beta, best_score)
             if beta <= alpha:
@@ -180,6 +269,11 @@ def alpha_beta_algo(board, player):
     """
     Algorithm that uses Alpha-Beta Pruning to choose the best move.
 
+    On boards up to 3x3 the search is exhaustive (optimal play). On larger
+    boards it is cut off after `get_search_depth` plies and positions at the
+    cutoff are scored with `evaluate_heuristic`, so play is strong but not
+    provably optimal.
+
     Args:
         board (list): The current board state.
         player (int): the current player
@@ -188,6 +282,8 @@ def alpha_beta_algo(board, player):
         tuple: The best move (row, col).
     """
 
+    depth = get_search_depth(len(board))
+    child_depth = None if depth is None else depth - 1
     possible_moves = functions.get_possible_moves(board)
     best_move = None
     best_score = -float('inf')
@@ -196,7 +292,7 @@ def alpha_beta_algo(board, player):
     for row, col in possible_moves:
         new_board = [row[:] for row in board]
         functions.make_move(new_board, row, col, player)
-        score = alpha_beta_minimax(new_board, 2 if player == 1 else 1, player, alpha, beta)
+        score = alpha_beta_minimax(new_board, 2 if player == 1 else 1, player, alpha, beta, child_depth)
         if score > best_score:
             best_score = score
             best_move = (row, col)

@@ -17,6 +17,19 @@ This program allows you to run and visualize Tic-Tac-Toe games between different
 * **Performance Metrics:** Track time, search-node counts, Gemini decisions,
   actual API requests, first-try validity, and corrective retries.
 
+### Search depth on larger boards
+
+On the standard 3x3 board, `minimax_algo` and `alpha_beta_algo` search the game
+tree exhaustively, so their play is optimal. Exhaustive search is intractable on
+larger boards (a 4x4 game has on the order of 10^13 move sequences), so on any
+board larger than 3x3 both searchers cut off after a fixed number of plies —
+4 by default, overridable with the `SEARCH_DEPTH_LIMIT` environment variable —
+and score the cutoff position with a line-counting heuristic
+(`evaluate_heuristic` in `algorithms.py`). Heuristic scores are normalized into
+(-1, 1) so they can never outrank a true win or loss found within the search
+horizon. Play on larger boards is therefore strong but not provably optimal,
+and the program prints a note saying so when you pick a board larger than 3x3.
+
 ## Getting Started
 
 ### Prerequisites

@@ -2,6 +2,22 @@
 import testing, algorithms, functions
 
 
+def print_search_note(board_size):
+    """
+    Prints an honest note about search behavior for the chosen board size.
+
+    Minimax and alpha-beta search 3x3 boards exhaustively (optimal play), but
+    larger boards are searched to a fixed depth with a heuristic evaluation at
+    the cutoff, so the user should know the play there is strong, not perfect.
+    """
+    depth = algorithms.get_search_depth(board_size)
+    if depth is not None:
+        print(f"\nNote: on boards larger than 3x3, minimax and alpha-beta search "
+              f"{depth} plies ahead\n(set the SEARCH_DEPTH_LIMIT environment variable "
+              f"to change this) and score the\ncutoff position with a heuristic, so "
+              f"their play is strong but not exhaustive.")
+
+
 def main():
     end = False
     while not(end):
@@ -19,6 +35,7 @@ def main():
                 try:
                     num_games = int(input("How many games should the test run? "))
                     board_size = int(input("How big should the board be (3 is standard)? "))
+                    print_search_note(board_size)
                     testing.run_performance_tests(num_games=num_games, board_size=board_size)
                 except ValueError:
                     print("Invalid input. Please enter integer values for the number of games and board size.\n")
@@ -38,6 +55,7 @@ def main():
                     algo2 = int(input("Select Player 2's algorithm: "))
                     functions.check_input(algo2, valid_inputs)
                     board_size = int(input("How big should the board be (3 is standard)? "))
+                    print_search_note(board_size)
                     algo1 = algo1 - 1
                     algo2 = algo2 - 1
                     testing.run_game_with_metrics(algos[algo1], algos[algo2], board_size)
@@ -61,6 +79,7 @@ def main():
                     algo2 = int(input("Select Player 2's algorithm: "))
                     functions.check_input(algo2, valid_inputs)
                     board_size = int(input("How big should the board be (3 is standard)? "))
+                    print_search_note(board_size)
                     algo1 = algo1 - 1
                     algo2 = algo2 - 1
                     functions.run_game(algos[algo1], algos[algo2], board_size=board_size, visualize=True)
