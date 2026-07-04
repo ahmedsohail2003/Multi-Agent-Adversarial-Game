@@ -1,4 +1,4 @@
-#algorithims.py
+# algorithms.py
 import functions
 from google import genai
 import re

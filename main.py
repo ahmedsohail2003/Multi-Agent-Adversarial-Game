@@ -9,7 +9,7 @@ def main():
         try:
             user_input = int(input("\nEnter the number corresponding with the option you would like to select:\n"
                                 "1: Standardized Test\n"
-                                "2: Standardized Test with Selected Algorithim\n"
+                                "2: Standardized Test with Selected Algorithm\n"
                                 "3: Watch Game in Real Time\n"
                                 "4: End Program\n"
                                 "Enter here: "))
@@ -26,16 +26,16 @@ def main():
                     print(f"An unexpected error occurred: {e}\n")
 
             elif user_input == 2:
-                print("\nAvalible Algorithims:\n"
+                print("\nAvailable Algorithms:\n"
                 "1: simple_algo\n"
                 "2: minimax\n"
                 "3: alpha_beta_minimax\n"
                 "4: gemini\n")
                 algos = [algorithms.simple_algo, algorithms.minimax_algo, algorithms.alpha_beta_algo, algorithms.gemini_algo]
                 try:
-                    algo1 = int(input("Select Player 1's algorithim: "))
+                    algo1 = int(input("Select Player 1's algorithm: "))
                     functions.check_input(algo1, valid_inputs)
-                    algo2 = int(input("Select Player 2's algorithim: "))
+                    algo2 = int(input("Select Player 2's algorithm: "))
                     functions.check_input(algo2, valid_inputs)
                     board_size = int(input("How big should the board be (3 is standard)? "))
                     algo1 = algo1 - 1
@@ -49,16 +49,16 @@ def main():
                             print(f"An unexpected error occurred: {e}\n")
             
             elif user_input == 3:
-                print("\nAvalible Algorithims:\n"
+                print("\nAvailable Algorithms:\n"
                 "1: simple_algo\n"
                 "2: minimax\n"
                 "3: alpha_beta_minimax\n"
                 "4: gemini\n")
                 algos = [algorithms.simple_algo, algorithms.minimax_algo, algorithms.alpha_beta_algo, algorithms.gemini_algo]
                 try:
-                    algo1 = int(input("Select Player 1's algorithim: "))
+                    algo1 = int(input("Select Player 1's algorithm: "))
                     functions.check_input(algo1, valid_inputs)
-                    algo2 = int(input("Select Player 2's algorithim: "))
+                    algo2 = int(input("Select Player 2's algorithm: "))
                     functions.check_input(algo2, valid_inputs)
                     board_size = int(input("How big should the board be (3 is standard)? "))
                     algo1 = algo1 - 1
