@@ -296,6 +296,7 @@ def alpha_beta_algo(board, player):
         if score > best_score:
             best_score = score
             best_move = (row, col)
+        alpha = max(alpha, best_score)
     return best_move
 
 

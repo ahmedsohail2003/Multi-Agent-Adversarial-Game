@@ -174,3 +174,22 @@ def test_minimax_4x4_matches_alpha_beta_on_forced_block(monkeypatch):
         [0, 0, 1, 0],
     ]
     assert algorithms.minimax_algo(board, 1) == (0, 3)
+
+
+def test_alpha_beta_prunes_across_root_moves():
+    """Regression: the root loop must tighten alpha between sibling moves.
+
+    Without alpha = max(alpha, best_score) in alpha_beta_algo, pruning only
+    happens inside subtrees and the empty-board search costs ~30.7k nodes;
+    with root tightening it costs ~18.3k. The threshold sits between the two.
+    """
+    board = [[0] * 3 for _ in range(3)]
+    algorithms.reset_node_counters()
+    algorithms.minimax_algo([row[:] for row in board], 1)
+    minimax_nodes = algorithms.get_minimax_nodes()
+    algorithms.reset_node_counters()
+    algorithms.alpha_beta_algo([row[:] for row in board], 1)
+    alpha_beta_nodes = algorithms.get_alpha_beta_nodes()
+    assert alpha_beta_nodes < minimax_nodes
+    assert alpha_beta_nodes < 20_000
+
