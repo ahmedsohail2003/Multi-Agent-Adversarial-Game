@@ -1,5 +1,7 @@
 # Tic-Tac-Toe AI Showdown
 
+**[View the live project page](https://ahmedsohail2003.github.io/search-vs-llm/)**: a one-page overview with an interactive game-tree illustration and a simulated demo of the LLM move gate.
+
 This program allows you to run and visualize Tic-Tac-Toe games between different AI algorithms. You can also run performance tests to compare the algorithms.
 
 > Academic team project (4 members).
